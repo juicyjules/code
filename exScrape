@@ -1,0 +1,88 @@
+#!/usr/bin/env python3.6
+from lxml import html
+import requests
+import sys,os
+import time
+global verbose
+verbose = False
+global check
+check = False
+def getConf(conf_file="/home/jules/.config/exScrape/config"):
+	config = open(conf_file,'r')
+	configs=[]
+	for line in config:
+		label=''
+		target_path=''
+		url = ''
+		exName = ''
+		if line[0] == '#':
+			pass
+		else:
+			modes = [label,target_path,url,exName]
+			mode = 0
+			for character in line:
+				if character == "\n":
+					break
+				if character == " ":
+					mode+=1
+					pass
+				else:
+					modes[mode]=modes[mode]+character
+			configs.append(modes)
+	return(configs)
+
+
+def getExercices(label, target_path,url,exName):
+	for no in range(100):
+		if exName == "uebung":
+			if len(str(no)) == 1 and no!=0:
+				no = "0"+str(no)
+		combined_url = url+exName+str(no)+".pdf"
+		pdf = requests.get(combined_url)
+		if pdf.status_code == requests.codes.ok:
+			foldername=str(no)
+			if len(foldername)==1:
+				foldername="0"+foldername
+			makeFolder(target_path+foldername+"/")
+			log(" "+(str(pdf.status_code) + " | "+ combined_url))
+			path = target_path+foldername+"/"+label+exName+str(no)+".pdf"
+			if os.path.isfile(path):
+				log(" "+" -+ | File already exists as: "+path)
+			else:
+				file = open(path,"wb")
+				file.write(pdf.content)
+				new()
+				log(" "+" ++ | File written succesfully as: "+path)
+		elif no!= 0:
+			log(" "+"----| No further Exercices avaiable...")
+			break
+def makeFolder(newpath):
+	if not os.path.exists(newpath):
+		os.makedirs(newpath)
+def log(string):
+	if verbose:
+		print(string)
+def new():
+	if check:
+		print("new")
+def start():
+	log(" "+"Stat| Starting exScrape...")
+	configs = getConf()
+	for config in configs:
+		getExercices(config[0],config[1],config[2],config[3])
+		log(" "+"Stat| Job Finished...")
+	log(" "+"Stat| Quitting exScrape...")
+
+if __name__ == "__main__":
+	sys.argv.pop(0)
+	if sys.argv:
+		log(sys.argv)
+		for character in sys.argv:
+			if character =="v":
+				verbose = True
+				break
+			if character =="b":
+				check = True
+				break
+	start()
+	

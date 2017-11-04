@@ -1,0 +1,12 @@
+#!/bin/sh
+well="$(/home/jules/bin/exScrape b)"
+if [ "$well" == "new" ]
+	then
+	echo " Neue Übungen verfügbar."
+	cd /home/jules/Uni/Ws1718Repo/
+	git add ./
+	git commit -m"Automated exUpdate Commit"
+	git push
+else
+	echo " Keine Neuen Übungen verfügbar"
+fi

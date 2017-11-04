@@ -1,0 +1,491 @@
+#!/usr/bin/env python3.6
+import threading
+from time import *
+import sys
+import os
+def c():
+    sudoku=[7,5,8,1,4,2,3,6,9,2,1,9,7,3,6,4,8,5,4,6,3,5,9,8,1,7,2,9,4,2,6,7,1,5,3,8,5,3,6,8,2,9,7,1,4,1,8,7,4,5,3,9,2,6,8,7,1,9,6,5,2,4,3,6,2,5,3,1,4,8,9,7,3,9,4,2,8,7,6,5,1]
+    return sudoku
+def b():
+    b1=[2,8,0,0,4,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,9,6,0,0,0,0,6,4,5,0,0,3,7,0,0,0,0,2,0,0,4,0,0,5,0,0,1,0,7,0,0,4,9,0,0,0,0,0,0,2,8,6,0,7,0,0,0,9,0,0,0,0,0,3,0,2]
+    return b1
+def a():
+    sudoku=[7,5,0,1,4,0,3,6,9,2,1,9,7,3,6,4,8,5,0,6,3,5,0,8,1,7,2,9,0,2,6,7,1,5,3,0,5,0,6,0,2,9,7,1,0,1,8,7,4,5,3,0,2,0,8,7,0,9,6,5,2,4,3,6,2,5,3,1,4,0,9,7,3,0,4,0,8,0,6,5,1]
+    return sudoku
+def mid():
+    sudokustring="010000000080000304000136200700690001092305460600017009001548000305000080000000040"
+    return ms(sudokustring)
+def exp():
+    sudokustring="204005100300000045006700080027300000100920000000000003018000000000063400400000956"
+    return ms(sudokustring)
+def ten():
+    sudokustring="090080000005000002000301400600000050000030000500247000479000000100600700000000210"
+    return ms(sudokustring)
+def ms(str):
+    list=[]
+    for character in str:
+        try:
+            list.append(int(character))
+        except:
+            pass
+    return list
+def readfromfile():
+    f=open(input("filename:"),"r")
+    return str(f.read())
+def read():
+    f=open("/home/julian/sudoku","r")
+    return str(f.read())
+
+def inputToSudoku():
+    string=input(">>>")
+    return ms(string)
+def test():
+    l=[]
+    for i in range(9):
+        for z in range(9):
+            l.append(z+1)
+    return l
+class sudoku(threading.Thread):
+    def __init__(self, numbers):
+        threading.Thread.__init__(self)
+        if len(numbers)==81:
+            self.numbers=numbers
+            self.rows=[]
+            self.cols=[]
+            self.blocks=[]
+            self.sudoku=[]
+            self.clear=20*"\n"
+            self.relatives=[[1,2],[0,2],[0,1],[4,5],[3,5],[3,4],[7,8],[6,8],[6,7]]
+        else:
+            print("errror")
+            self.numbers=[int(x) for x in range(81)]
+
+        self.update()
+        self.backup()
+        self.check_missings()
+        self.validate_fields()
+        self.get_missing_numbers()
+        self.create_blockcode()
+    def backup(self):
+        self.retain=self.copy(self.numbers)
+    def get_rows(self):
+        self.rows=[]
+        for x in range(9):
+            row=[]
+            for y in range(9):
+                row.append(self.numbers[y+x*9])
+            self.rows.append(row)
+    def get_cols(self):
+        self.cols=[]
+        for x in range(9):
+            col=[]
+            for y in range(9):
+                col.append(self.numbers[x+y*9])
+            self.cols.append(col)
+    def get_blocks(self):
+        self.blocks=[]
+        for bx in range(3):
+            for by  in range(3):
+                block=[]
+                for x in range(3):
+                    for y in range(3):
+                        block.append(self.numbers[27*bx+3*by+9*x+y])
+                self.blocks.append(block)
+    def show_old(self):
+        self.update()
+        for x in range(9):
+            print(self.rows[x])
+            if(x%3==2):
+                print("\n")
+        print(s.amount_missing,s.errors)
+    def update(self):
+       self.get_rows()
+       self.get_cols()
+       self.get_blocks()
+       self.all_errors()
+       self.check_missings()
+       self.get_missing_numbers()
+       self.sudoku=[self.rows,self.cols,self.blocks]
+    def all_errors(self):
+        self.errors=0
+        for entity in self.sudoku:
+            self.errors+=self.get_errors(entity)
+    def get_errors(self,list):
+        errors=0
+        for i in list:
+            if not self.check(i):
+                errors+=1
+        return errors
+    def boolean_of_list(self,list):
+        for i in list:
+            print(i)
+            if not self.check(i):
+                return False
+    def reset(self):
+        self.numbers=self.copy(self.retain)
+        self.update
+    def check(self,list):
+        seen=set()
+        digits={1,2,3,4,5,6,7,8,9}
+        for x in list:
+            if x in seen and not x==0:
+                return False
+            seen.add(x)
+        return True
+#############experimental###########################
+    def copy(self,s):
+        lst=[]
+        for x in s:
+            lst.append(x)
+        return lst
+    def validate_fields(self):
+        self.validates=[False for i in range(81)]
+        for x in range(81):
+            l,c =self.lc_by_number(x)
+            b = self.block_by_lc(l,c)
+            if not self.check(self.rows[l]) and not self.check(self.cols[c]) and not self.check(self.blocks[b]):
+                self.validates[x]=False
+            else:
+                self.validates[x]=True
+    def check_missings(self):
+        self.missing=[False for i in range(81)]
+        self.amount_missing=0
+        for x in range(81):
+            if self.numbers[x]==0:
+                self.missing[x]=True
+            else:
+                self.missing[x]=False
+        for i in self.missing:
+            if i:
+                self.amount_missing+=1 
+################coordinates#################
+    def lc_by_number(self,number):
+        line = int(number/9)
+        col = number%9
+        return line,col
+    def number_by_lc(self,l,c):
+        number=9*l+c
+        return number
+    def numbers_by_l(self,l):
+        numbers=[i+(9*l) for i in range(9)]
+        return numbers
+    def numbers_by_c(self,c):
+        numbers=[9*i+c for i in range(9)]
+        return numbers
+    def block_by_lc(self,l,c):
+        block=int(l/3)*3+int(c/3)
+        return block
+    def get_digit_numbers(self,digit):
+        return_value=[]
+        temp_numbers=self.copy(self.numbers)
+        z=0
+        for i in temp_numbers:
+            if i == digit:
+                return_value.append(temp_numbers.index(i)+z)
+                temp_numbers.remove(i)
+                z+=1
+        return return_value
+    def numbers_by_b(self,b):
+        return self.blockcode[b]
+    def create_blockcode(self):
+        self.blockcode=[[]for x in range(9)]
+        for i in range(81):
+            l,c =self.lc_by_number(i)
+            b = self.block_by_lc(l,c)
+            self.blockcode[b].append(i)
+    def numbers_by_bool(self,bool_list):
+        numbers=[]
+        for i in range(81):
+            if bool_list[i]:
+                numbers.append(i)
+        return numbers
+#################verification##############
+    def get_missing_numbers(self):
+        self.missing_numbers=[]
+        for i in range(81):
+            if self.missing[i]:
+                self.missing_numbers.append(i)
+
+    def fill(self,digit):
+        self.update()
+        blocked_lines=[]
+        blocked_cols=[]
+        blocked_blocks=[]
+        blocked_numbers=[]
+        number_list=self.get_digit_numbers(digit)
+        for number in number_list:
+            l,c =self.lc_by_number(number)
+            b=self.block_by_lc(l,c)
+            blocked_lines.append(l)
+            blocked_cols.append(c)
+            blocked_blocks.append(b)
+        for l in blocked_lines:
+            for x in self.numbers_by_l(l):
+                blocked_numbers.append(x)
+        for c in blocked_cols:
+            for x in self.numbers_by_c(c):
+                if blocked_numbers.count(x)==0:
+                    blocked_numbers.append(x)
+        for b in blocked_blocks:
+            for x in self.blockcode[b]:
+                if blocked_numbers.count(x)==0:
+                    blocked_numbers.append(x)
+        for n in range(len(self.numbers)):
+            if not self.numbers[n]==0:
+                blocked_numbers.append(n)
+        for block in range(9):
+            block_numbers=self.copy(self.blockcode[block])
+            for blocked_number in blocked_numbers:
+                try:
+                    block_numbers.remove(blocked_number)
+                except:
+                    pass
+            if len(block_numbers)==1:
+                num=block_numbers[0]
+                #print(block_numbers,self.numbers[num],digit," | ", digit)
+                if self.numbers[num]==0:
+                    if self.checkall(num,digit):
+                        self.numbers[num]=digit
+                        #print("inserted...")
+            else:
+                #print("more than one possibilities to fill the digit")
+                pass
+            pass
+    def solve(self,iterations=1):
+        for x in range(iterations):
+            for i in range(9):
+                digit=i+1
+                #print("begin filling blocks for digit",digit)
+                self.fill(digit)
+                #print("end filling blocks for digit",digit)
+            #print("Iteration",iterations,"done...")
+            #self.finishoff()
+        #self.show()
+    def checkall(self,number,digit):
+        self.update()
+        l,c =self.lc_by_number(number)
+        b=self.block_by_lc(l,c)
+        #print(digit in self.rows[l] , digit in self.cols[c] , digit in self.blocks[b])
+        if (digit in self.rows[l]) or (digit in self.cols[c]) or (digit in self.blocks[b]):
+            return False
+        else:
+            return True
+    def miss(self,list):
+        cp=self.copy(list)
+        if cp.count(0)==1:
+            for x in range(10):
+                try:
+                    cp.remove(x)
+                except ValueError:
+                    return x
+        else:
+            return 0
+    def finishoff(self):
+        self.update()
+        for l in range(9):
+            self.update()
+            if self.rows[l].count(0)==1:
+                m=self.miss(self.rows[l])
+                i=self.rows[l].index(0)
+                number=self.number_by_lc(l,i)
+                self.numbers[number]=m
+        for c in range(9):
+            self.update()
+            if self.cols[c].count(0)==1:
+                m=self.miss(self.cols[c])
+                i=self.cols[c].index(0)
+                number=self.number_by_lc(i,c)
+                self.numbers[number]=m
+        for b in range(9):
+            self.update()
+            if self.blocks[b].count(0)==1:
+                print(self.miss(self.blocks[b]))
+                m=self.miss(self.blocks[b])
+                print(m)
+                i=self.blocks[b].index(0)
+                number=self.numbers_by_b(b)[i]
+                self.numbers[number]=m
+    def bruteforce(self):
+        s.update()
+        for x in range(1,10):
+            for number in self.missing_numbers:
+                #print(x,number)
+                if self.checkall(number,x):
+                    #print("inserting",x,"at",number)
+                    self.numbers[number]=x
+                    s.update()
+        
+    def solver(self):
+        self.store=[]
+        for number in self.missing_numbers:
+            number_store=[1,2,3,4,5,6,7,8,9]
+            l,c =self.lc_by_number(number)
+            b=self.block_by_lc(l,c)
+            self.kill(number_store,l,c,b)
+            if len(number_store)==1:
+                self.numbers[number]=number_store[0]
+            else:
+                self.store.append([number,number_store])
+        self.update()
+    def kill(self,list,l,c,b):
+        self.update()
+        for x in self.rows[l]:
+            try:
+                list.remove(x)
+            except:
+                pass
+        for x in self.cols[c]:
+            try:
+                list.remove(x)
+            except:
+                pass
+        for x in self.blocks[b]:
+            try:
+                list.remove(x)
+            except:
+                pass
+    def show(self):
+        self.update()
+        for y in range(3):
+            for x in range(3):
+                l=self.rows[x+3*y]
+                print("   ",l[0],l[1],l[2],"|",l[3],l[4],l[5],"|",l[6],l[7],l[8])
+            if y!=2:
+                print("    ---------------------")
+        #print("\n")
+        #print("|",s.amount_missing,"|",s.errors,"|")
+        #print("\n")
+    def show2(self):
+        r=self.rows
+        self.update()
+        print()
+        for yyy in range(3):
+            for xxx in range(3):
+                try:
+                    l=r[xxx+3*yyy]
+                except:
+                    l=[0 for x in range(9)]
+                print("   ",l[0],l[1],l[2],"|",l[3],l[4],l[5],"|",l[6],l[7],l[8])
+                
+            if yyy!=2:
+                print("    ---------------------")
+    def run(self):
+        self.start_time=time()
+        while s.amount_missing!=0:
+            e=self.errors
+            self.solver()
+            self.solve()
+            s.update()
+            if e==self.errors:
+                break
+        self.backtrack()
+        self.finish_time=time()
+        #print("sudoku solved")
+        #s.show()
+    def backtrack(self):
+        self.values=[1]
+        self.bt=0
+        self.backtrack_misses=self.copy(self.missing_numbers)
+        self.backup()
+        #s.show()
+        while True:
+        #for x in range(10):
+            #print(self.amount_missing)
+            self.backtrack_subroutine()
+            #s.show()
+            sleep(0.001)
+            self.bt+=1
+            if self.amount_missing==0:
+                break
+            self.reset()
+    def backtrack_subroutine(self):
+        append=self.values.append
+        for i in range(len(self.backtrack_misses)):
+            #print(len(self.backtrack_misses))
+            try:
+                number=self.backtrack_misses[i]
+                while self.values[i]<10:
+                    #print(number," | ", self.values[i])
+                    if self.checkall(number,self.values[i]):
+                        self.numbers[number]=self.values[i]
+                        #print("written",self.values[i],"at",number)
+                        if i+1==len(self.values):
+                            append(1)
+                        self.update()
+                        break
+                    else:
+                        if i+1==len(self.values):
+                            append(1)
+                        self.update()
+                        self.values[i]+=1
+                if self.values[i]>9:
+                    self.values.pop(i)
+                    self.values[i-1]+=1
+            except:
+                self.update()
+                #print("need to backtrack")
+                break
+    def monitor(self,interval=0.01):
+        sleep(2)
+        while True:
+            if not s.isAlive():
+                break
+            #print("|",s.amount_missing,"|",s.errors,"|")
+            if self.amount_missing!=0:
+                print(str("|"+"="*(81-self.amount_missing)+" "*self.amount_missing+"|"+str((len("="*(81-self.amount_missing))))))
+            sleep(interval)
+        sleep(1)
+        print("su finishes")
+        s.show()
+    def console_monitor(self,interval=0.1):
+        sleep(2)
+        while True:
+            os.system("clear")
+            if not s.isAlive():
+                break
+            #print("|",s.amount_missing,"|",s.errors,"|")
+            if self.amount_missing!=0:
+                sys.stdout.write(str("Solving Sudoku... Please Wait \n")+str("["+"="*(74-self.amount_missing)+" "*self.amount_missing+"]"+str((81-self.amount_missing))))
+                sys.stdout.flush()
+            sleep(interval)
+        sleep(1)
+        t=self.finish_time-self.start_time
+        print("sudoku finished in "+str(t)[0:5]," seconds")
+        s.show()
+    def console_monitor2(self,interval=0.1):
+        sleep(0.5)
+        while True:
+            os.system("clear")
+            if not s.isAlive():
+                break
+            #print("|",s.amount_missing,"|",s.errors,"|")
+            #sys.stdout.write(str("Solving Sudoku... Please Wait    Time elapsed:"+str(time()-self.start_time)[0:5]+" \n")+str("["+"="*(74-self.amount_missing)+" "*self.amount_missing+"]"+str((81-self.amount_missing)))+"\n")
+            try:
+                self.show2()
+            except:
+                pass
+            sys.stdout.write(str("\n    Time elapsed: "+str(time()-self.start_time)[0:5]))    
+            sys.stdout.flush()
+            sleep(interval)
+        sleep(1)
+        t=self.finish_time-self.start_time
+        print("sudoku finished in "+str(t)[0:5],"seconds and",self.bt,"backtracks")
+        self.show()
+###################not bad #######################
+#s=sudoku(ten())
+#s.start()
+#s.monitor()
+if __name__=="__main__":
+    if len(sys.argv)==2:
+        try:
+            s=sudoku(ms(sys.argv[1]))
+            s.start()
+            s.console_monitor2()
+        except:
+            print("Enter argument does not contain a proper sudoku \nCheck your input again\nIt is",len(sys.argv[1]),"and either does not contain numbers only, ot its length is unfit.\nQuitting...")
+            os.system("")
+    else:
+        s=sudoku(ten())
+        s.start()
+        s.console_monitor2()
+
