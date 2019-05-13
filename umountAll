@@ -1,0 +1,19 @@
+#!/usr/bin/sh
+content="$(cat /home/jules/.mounted)"
+if [[ -z "$content" ]]
+	then notify-send "Nothing to unmount" "Nothing to do here"
+	else
+		#notify-send "Unmounting all the things" "Pray to God it works" &
+		good=1
+		while read dev; do
+			umount $dev;
+			if [ $? -eq 0 ] 
+				then notify-send "Unmounted $dev" "You are welcome" -u "low" 
+				else notify-send "Couldn't unmount $dev"  "Shits fucked yo" -u "critical" && good=0
+			fi 
+		done < /home/jules/.mounted &&
+		if [[ $good -eq 1 ]]
+			then notify-send "Unmounted all the things!" "Now plug all the drives" -t 5000; rm -rf /home/jules/.mounted
+			else notify-send "Great you fucked .mounted" "I mean how do you want to fix that?" -u  "critical"
+		fi 
+fi

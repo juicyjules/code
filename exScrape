@@ -7,6 +7,8 @@ global verbose
 verbose = False
 global check
 check = False
+global update
+update = False
 def getConf(conf_file="/home/jules/.config/exScrape/config"):
 	config = open(conf_file,'r')
 	configs=[]
@@ -46,7 +48,12 @@ def getExercices(label, target_path,url,exName):
 			makeFolder(target_path+foldername+"/")
 			log(" "+(str(pdf.status_code) + " | "+ combined_url))
 			path = target_path+foldername+"/"+label+exName+str(no)+".pdf"
-			if os.path.isfile(path):
+			if update:
+				file = open(path,"wb")
+				file.write(pdf.content)
+				new()
+				log(" "+" ++ | File written succesfully as: "+path)
+			elif os.path.isfile(path):
 				log(" "+" -+ | File already exists as: "+path)
 			else:
 				file = open(path,"wb")
@@ -83,6 +90,10 @@ if __name__ == "__main__":
 				break
 			if character =="b":
 				check = True
+				break
+			if character == "u":
+				update = True
+				verbose = True
 				break
 	start()
 	

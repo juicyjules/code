@@ -1,0 +1,5 @@
+#!/bin/env bash
+scp $1 j_stiess17@deepthought.fachschaft.informatik.uni-kl.de:/home/j_stiess17/print.pdf > /dev/null 
+ssh j_stiess17@deepthought.fachschaft.informatik.uni-kl.de lp -d wowbagger /home/j_stiess17/print.pdf > /dev/null 
+echo "successfully printed $1"
+

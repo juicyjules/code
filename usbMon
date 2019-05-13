@@ -1,0 +1,101 @@
+#!/usr/bin/python
+import pyudev
+from time import sleep
+from subprocess import call
+
+context = pyudev.Context()
+monitor = pyudev.Monitor.from_netlink(context)
+monitor.filter_by(subsystem='block')
+class callbacker():
+    def __init__(self):
+        self.connected=[]
+        self.mainPart=None
+        self.summary=""
+        self.body=""
+        self.diskDev = ""
+        self.diskSize = 0
+        self.mainPartLabel = ""
+        self.mainPartDev = ""
+        self.uuid=''
+        self.mounted=[]
+        self.fileLoc="/home/jules/.mounted"
+    def updateMounts(self):
+        file = open(self.fileLoc,'w')
+        for line in self.mounted:
+            file.write(line)
+    def log_event(self,action,device):
+        if(action=='add' and device.get('DEVTYPE')=='partition' and device.get("DEVNAME")==self.mainPartDev):
+            self.mainPartLabel=device.get("ID_FS_LABEL")
+            self.uuid=device.get("ID_FS_UUID")
+            self.conFin()
+        if(action=='add' and device not in self.connected and device.get('DEVTYPE')=='disk'):
+            self.connected.append(device)
+            self.diskSize=device.attributes.asint('size')*512
+            children = device.children
+            partitionCount = 0
+            maxSize = 0
+            for child in children:
+                if(child.get('DEVTYPE')=='partition'):
+                    partitionCount += 1
+                if(child.attributes.asint('size')>maxSize):
+                    maxPart=child
+                    maxSize=maxPart.attributes.asint('size')
+            self.mainPart=maxPart
+            self.mainPartDev=self.mainPart.get("DEVNAME")
+            self.diskDev=device.get('DEVNAME')
+        if(action=='remove' and device in self.connected):
+            self.connected.remove(device)
+            self.disFin()
+    def conFin(self):
+        self.createMsgCon()
+        self.notify()
+        if not self.mount():
+            self.summary=("Mounted {} on /media/".format(self.mainPartLabel))
+            self.body=("You are welcome")
+            self.notify()
+            if (self.mainPartDev+"\n") not in self.mounted: 
+                self.mounted.append(self.mainPartDev+"\n")
+            self.updateMounts()
+        else:
+            self.error("Couldn't mount "+self.mainPartLabel,"You sure you packed it in fstab?")
+            call(["rmdir","/media/"+self.mainPartLabel+"/"])
+
+    def disFin(self):
+        self.createMsgDis()
+        self.notify()
+        if (self.mainPartDev+"\n") in self.mounted:
+            if(call(["rmdir","/media/"+self.mainPartLabel+"/"])):
+                self.error("You fucking broke something","Probably didn't unmount "+self.mainPartLabel)
+            self.mounted.remove(self.mainPartDev+"\n")
+            self.updateMounts()
+        else:
+            call(["notify-send","Removed "+self.mainPartLabel,"It's fine I never even mounted it","-t" ,'5000'])
+    def createMsgCon(self):
+        self.summary = "{} connected on {}".format(fileSize(self.diskSize),self.diskDev)
+        self.body = " {} under {}".format(self.mainPartLabel,self.mainPartDev)
+    
+    def createMsgDis(self):
+        self.summary = "{} disconnected on {}".format(fileSize(self.diskSize),self.diskDev)
+        self.body = "I hope you unmounted that shit"
+
+    def notify(self):
+        call(["notify-send",self.summary,self.body,"-t" ,'5000'])
+    def error(self,sum,msg):
+        call(["notify-send",sum,msg,"-t" ,'5000',"-u","critical"])
+    def mount(self):
+        call(["mkdir","/media/"+self.mainPartLabel+"/"])
+        return call(["mount","-U",self.uuid])
+
+def fileSize(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+c=callbacker()
+observer = pyudev.MonitorObserver(monitor, c.log_event)
+observer.start()
+while(True):
+   sleep(10) 
+    

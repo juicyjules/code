@@ -1,9 +1,10 @@
 #!/bin/sh
 well="$(/home/jules/bin/exScrape b)"
+#echo "Starting exUpdate..."
 if [ "$well" == "new" ]
 	then
 	echo " Neue Übungen verfügbar."
-	cd /home/jules/Uni/Ws1718Repo/
+	cd /home/jules/Uni/Ws1718/
 	git add ./
 	git commit -m"Automated exUpdate Commit"
 	git push

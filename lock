@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+tmpbg='/tmp/screen.png'
+
+(( $# )) && { icon=$1; }
+
+scrot "$tmpbg"
+#convert "$tmpbg" -scale 10% -scale 1000% "$tmpbg"
+convert "$tmpbg" -filter Gaussian -blur 0x3 "$tmpbg"
+#convert "$tmpbg" -resize 5% -resize 2000% "$tmpbg"
+#/usr/bin/gm convert "$tmpbg" -gaussian 0x8 "$tmpbg"
+
+
+#convert "$tmpbg" -scale 10% -scale 1000% "$tmpbg"
+#convert "$image" "$icon2" -gravity center -composite -matte "$tmpbg"
+
+i3lock -i "$tmpbg"

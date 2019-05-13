@@ -1,0 +1,23 @@
+#!/bin/env python3.6
+import requests
+import sys
+class exCal():
+	def __init__(self,user,password):
+		self.export_url = "https://office.kis.uni-kl.de/views/calendar/iCalExport.asp?startdt=01.10.2017&enddt=31.03.2018 23:59:59"
+		self.url = "https://office.kis.uni-kl.de/"
+		self.login_url = "https://office.kis.uni-kl.de/views/pia/pia.asp"
+		self.data = {"u": user,"p":password}
+		self.log("Retrieving iCal from "+self.url)
+		self.calendar = requests.post(self.export_url,self.data)
+		self.log("Retrieved iCal")
+	def save(self,path="/home/jules/Uni/"):
+		self.log("Saving iCal to "+path)
+		file = open(path+"calendar.ics","w")
+		file.write(self.calendar.text)
+		file.close()
+		self.log("iCal written...")
+	def log(self,string):
+		print("    | "+string)
+if __name__ == "__main__":
+	xc = exCal(sys.argv[1],sys.argv[2])
+	xc.save()

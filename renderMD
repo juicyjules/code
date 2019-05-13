@@ -1,0 +1,5 @@
+#!/usr/bin/sh
+killall grip
+grip $1 &> /dev/null &
+sleep 4
+surf localhost:6419 &> /dev/null &
